@@ -1,0 +1,13 @@
+sources:
+  - name: hh_api
+    type: api
+    enabled: true
+    base_url: https://api.hh.ru/vacancies
+    query: python
+    area: 1
+    per_page: 100
+
+  - name: company_parser
+    type: parser
+    enabled: false
+    base_url: https://example.com/careers

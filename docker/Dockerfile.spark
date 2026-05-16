@@ -1,4 +1,32 @@
-FROM spark:4.1.1-scala2.13-java21-python3-ubuntu
+FROM spark:3.5.8-scala2.12-java17-python3-ubuntu
+
+USER root
 
 ENV SPARK_HOME=/opt/spark
 ENV PATH=$SPARK_HOME/bin:$PATH
+
+ARG SPARK_VERSION=3.5.8
+ARG SCALA_BINARY_VERSION=2.12
+ARG ICEBERG_VERSION=1.6.0
+ARG COURSIER_VERSION=2.1.24
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends curl ca-certificates; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    curl -fL "https://github.com/coursier/coursier/releases/download/v${COURSIER_VERSION}/cs-x86_64-pc-linux.gz" \
+      | gzip -d > /usr/local/bin/cs; \
+    chmod +x /usr/local/bin/cs; \
+    mkdir -p /tmp/spark-jars; \
+    cs fetch \
+      "org.apache.spark:spark-sql-kafka-0-10_${SCALA_BINARY_VERSION}:${SPARK_VERSION}" \
+      "org.apache.iceberg:iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}:${ICEBERG_VERSION}" \
+      "org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}" \
+      --classpath \
+      | tr ':' '\n' \
+      | xargs -I{} cp -v {} "${SPARK_HOME}/jars/"; \
+    rm -rf /root/.cache/coursier /tmp/spark-jars /usr/local/bin/cs
+
+USER spark
