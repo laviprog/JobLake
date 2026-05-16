@@ -189,6 +189,7 @@ services:
       CATALOG_WAREHOUSE: ${JOBLAKE_WAREHOUSE:-s3://joblake/warehouse}
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://minio:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
     depends_on:
       minio-init:
         condition: service_completed_successfully
@@ -243,6 +244,14 @@ services:
       - "127.0.0.1:8081:8081"
     environment:
       SPARK_NO_DAEMONIZE: "true"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC_RAW_VACANCIES: joblake.raw.vacancies
+      JOBLAKE_WAREHOUSE: s3://joblake/warehouse
+      ICEBERG_REST_URI: http://iceberg-rest:8181
+      S3_ENDPOINT: http://minio:9000
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-admin}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-adminadmin}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     volumes:
       - ./src/spark-apps:/opt/spark-apps
@@ -271,6 +280,12 @@ services:
   collector:
     build: ./src/collector
     container_name: joblake-collector
+    environment:
+      SOURCES_CONFIG: /app/configs/sources.yaml
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC_RAW_VACANCIES: joblake.raw.vacancies
+    volumes:
+      - ./configs:/app/configs:ro
     depends_on:
       kafka:
         condition: service_healthy
@@ -284,6 +299,11 @@ services:
     container_name: joblake-agent
     ports:
       - "127.0.0.1:8088:8080"
+    environment:
+      ROOT_PATH: ${AGENT_ROOT_PATH:-/api/v1}
+      TRINO_HOST: trino
+      TRINO_PORT: 8080
+      TRINO_USER: ${TRINO_USER:-joblake}
     depends_on:
       trino:
         condition: service_started
@@ -296,6 +316,12 @@ services:
     container_name: joblake-app
     ports:
       - "127.0.0.1:8501:8501"
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8501
+      AGENT_URL: http://agent:8080/api/v1
+      TRINO_HOST: trino
+      TRINO_PORT: 8080
     depends_on:
       trino:
         condition: service_started
