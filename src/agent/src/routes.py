@@ -2,6 +2,7 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import RedirectResponse
 from scalar_fastapi import get_scalar_api_reference
 
+from src.agent.routes import router as agent_router
 from src.config import settings
 from src.schema import HealthCheck
 
@@ -48,3 +49,4 @@ def routes_register(app: FastAPI) -> None:
     Registers all API routes with the FastAPI application.
     """
     app.include_router(router=router)
+    app.include_router(router=agent_router)
