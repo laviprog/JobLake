@@ -53,32 +53,7 @@ AI agent chat:
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Habr["Habr Career<br/>and other job data sources"] --> Collector["Collector service"]
-    Collector --> Kafka["Kafka<br/>raw vacancy topic"]
-
-    Airflow["Airflow DAG"] --> SparkBronze["Spark<br/>Kafka to Bronze"]
-    Kafka --> SparkBronze
-    SparkBronze --> Bronze["Iceberg Bronze<br/>vacancies_raw"]
-    Bronze --> SparkSilver["Spark<br/>Bronze to Silver"]
-    SparkSilver --> Silver["Iceberg Silver<br/>normalized entities"]
-    Silver --> SparkGold["Spark<br/>Silver to Gold"]
-    SparkGold --> Gold["Iceberg Gold<br/>analytics marts"]
-
-    MinIO["MinIO / S3"] --- Bronze
-    MinIO --- Silver
-    MinIO --- Gold
-    Iceberg["Iceberg REST catalog"] --- Bronze
-    Iceberg --- Silver
-    Iceberg --- Gold
-
-    Gold --> Trino["Trino SQL engine"]
-    Trino --> App["Streamlit dashboard"]
-    Trino --> Agent["FastAPI AI agent"]
-    Ollama["Ollama LLM"] --> Agent
-    Agent --> App
-```
+![Architecture diagram](assets/architecture.png)
 
 ## Data Sources
 
