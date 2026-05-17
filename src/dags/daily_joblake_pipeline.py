@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.providers.standard.operators.bash import BashOperator
 
 DEFAULT_ARGS = {
     "owner": "data-eng",
@@ -18,7 +18,7 @@ with DAG(
     catchup=False,
     tags=["joblake", "lakehouse", "jobs"],
     default_args=DEFAULT_ARGS,
-    schedule=None,
+    schedule_interval=None,
 ) as dag:
 
     spark_kafka_to_bronze = BashOperator(

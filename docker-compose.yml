@@ -277,6 +277,7 @@ services:
 
   collector:
     build: ./src/collector
+    container_name: joblake-collector
     environment:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
       KAFKA_TOPIC_RAW: ${KAFKA_TOPIC_RAW:-joblake.raw.vacancies}
@@ -294,10 +295,17 @@ services:
     ports:
       - "127.0.0.1:8088:8080"
     environment:
+      ENV: ${ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ROOT_PATH: ${AGENT_ROOT_PATH:-/api/v1}
-      TRINO_HOST: trino
-      TRINO_PORT: 8080
+      TRINO_SCHEME: ${TRINO_SCHEME:-http}
+      TRINO_HOST: ${TRINO_HOST:-trino}
+      TRINO_PORT: ${TRINO_PORT:-8080}
       TRINO_USER: ${TRINO_USER:-joblake}
+      TRINO_CATALOG: ${TRINO_CATALOG:-joblake}
+      TRINO_SCHEMA: ${TRINO_SCHEMA:-gold}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL_NAME: ${OLLAMA_MODEL_NAME:-gemma4:31b-cloud}
     depends_on:
       trino:
         condition: service_started
@@ -311,11 +319,16 @@ services:
     ports:
       - "127.0.0.1:8501:8501"
     environment:
+      ENV: ${ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       APP_HOST: 0.0.0.0
       APP_PORT: 8501
       AGENT_URL: http://agent:8080/api/v1
-      TRINO_HOST: trino
-      TRINO_PORT: 8080
+      TRINO_HOST: ${TRINO_HOST:-trino}
+      TRINO_PORT: ${TRINO_PORT:-8080}
+      TRINO_USER: ${TRINO_USER:-joblake}
+      TRINO_CATALOG: ${TRINO_CATALOG:-joblake}
+      TRINO_SCHEMA: ${TRINO_SCHEMA:-gold}
     depends_on:
       trino:
         condition: service_started
