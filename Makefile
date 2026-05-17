@@ -17,6 +17,3 @@ logs:
 
 ps:
 	docker compose ps
-
-collector:
-	docker compose --profile jobs run --rm collector

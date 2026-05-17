@@ -1,11 +1,16 @@
 # JobLake Collector Service
 
-`collector` is a batch ingestion service that collects vacancies from Habr Career and
+Ingestion service that collects vacancies from Habr Career and
 publishes raw vacancy records to Kafka.
 
-This README covers only the collector service. Project-wide startup instructions,
-infrastructure services, and lakehouse processing are documented at the repository
-level.
+## Table of Contents
+
+- [Responsibilities](#responsibilities)
+- [Runtime Flow](#runtime-flow)
+- [Published Messages](#published-messages)
+- [Development Checks](#development-checks)
+
+Back to the [project README](../../README.md).
 
 ## Responsibilities
 
@@ -98,70 +103,7 @@ Message body shape:
 Error messages are published to `KAFKA_TOPIC_ERROR` and include the failed stage,
 source, URL or vacancy ID when available, and the error text.
 
-## Configuration
-
-Settings are loaded from environment variables or from a local `.env` file in the
-collector working directory.
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `ENV` | `prod` | Logging mode. Use `dev` for console logs and `prod` for JSON logs. |
-| `LOG_LEVEL` | `INFO` | Python logging level. |
-| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Kafka bootstrap servers. Use `kafka:29092` inside Docker Compose. |
-| `KAFKA_TOPIC_RAW` | `vacancies.raw` | Topic for successfully parsed vacancy records. |
-| `KAFKA_TOPIC_ERROR` | `vacancies.errors` | Topic for parse and publish failures. |
-| `USER_AGENT` | `JobLake collector/0.1 (+https://github.com/laviprog/joblake)` | HTTP user agent for requests to Habr Career. |
-| `HABR_CAREER_BASE_URL` | `https://career.habr.com` | Habr Career base URL. |
-| `HABR_CAREER_REQUEST_DELAY_SECONDS` | `0.5` | Delay between listing pages and vacancy requests. |
-| `HABR_CAREER_MAX_PAGES` | unset | Optional crawl limit for local testing or small runs. |
-
-Example `.env` for a local run:
-
-```dotenv
-ENV=dev
-LOG_LEVEL=INFO
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-KAFKA_TOPIC_RAW=vacancies.raw
-KAFKA_TOPIC_ERROR=vacancies.errors
-HABR_CAREER_MAX_PAGES=1
-```
-
-## Run With Docker Compose
-
-From the repository root:
-
-```bash
-docker compose --profile jobs run --rm collector
-```
-
-For a small smoke run:
-
-```bash
-docker compose --profile jobs run --rm \
-  -e HABR_CAREER_MAX_PAGES=1 \
-  collector
-```
-
-The service exits after the crawl finishes.
-
-## Run Locally
-
-From `src/collector`:
-
-```bash
-uv sync
-uv run python -m src.main
-```
-
-Local execution expects Kafka to be reachable through `KAFKA_BOOTSTRAP_SERVERS`.
-
 ## Development Checks
-
-Run the linter from `src/collector`:
-
-```bash
-uv run ruff check .
-```
 
 Run formatting from `src/collector`:
 
@@ -169,15 +111,8 @@ Run formatting from `src/collector`:
 uv run ruff format .
 ```
 
-## Source Layout
+Run the linter from `src/collector`:
 
-```text
-src/
-  main.py                # job entrypoint
-  pipeline.py            # orchestration and error handling
-  habr_career_parser.py  # Habr Career crawler and parser
-  publisher.py           # Kafka publishing
-  schema.py              # Pydantic message models
-  config.py              # environment-based settings
-  logging.py             # structlog configuration
+```bash
+uv run ruff check .
 ```

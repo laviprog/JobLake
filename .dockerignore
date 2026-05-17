@@ -3,12 +3,6 @@
 .idea
 .vscode
 .env
-.env.*
-!.env.example
 .python-version
 __pycache__/
 *.pyc
-data/
-logs/
-src/agent/.venv
-src/agent/.idea
