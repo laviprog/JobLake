@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 
 from pyspark.sql import DataFrame
@@ -78,30 +76,27 @@ def to_bronze_events(kafka_df: DataFrame) -> DataFrame:
     )
 
 
-def main() -> None:
-    spark = create_spark("joblake-kafka-to-bronze")
-    topic = env("KAFKA_TOPIC_RAW_VACANCIES", "joblake.raw.vacancies")
-    bootstrap_servers = env("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
-    checkpoint_location = env(
-        "BRONZE_CHECKPOINT_LOCATION",
-        "/opt/spark-data/checkpoints/kafka_to_bronze/vacancies_raw",
+
+spark = create_spark("joblake-kafka-to-bronze")
+topic = env("KAFKA_TOPIC_RAW_VACANCIES", "joblake.raw.vacancies")
+bootstrap_servers = env("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
+checkpoint_location = env(
+    "BRONZE_CHECKPOINT_LOCATION",
+    "/opt/spark-data/checkpoints/kafka_to_bronze/vacancies_raw",
+)
+
+try:
+    ensure_bronze_table(spark)
+
+    bronze_df = to_bronze_events(read_kafka_stream(spark, bootstrap_servers, topic))
+    query = (
+        bronze_df.writeStream.format("iceberg")
+        .outputMode("append")
+        .option("checkpointLocation", checkpoint_location)
+        .trigger(availableNow=True)
+        .toTable(qualified_table())
     )
+    query.awaitTermination()
+finally:
+    spark.stop()
 
-    try:
-        ensure_bronze_table(spark)
-
-        bronze_df = to_bronze_events(read_kafka_stream(spark, bootstrap_servers, topic))
-        query = (
-            bronze_df.writeStream.format("iceberg")
-            .outputMode("append")
-            .option("checkpointLocation", checkpoint_location)
-            .trigger(availableNow=True)
-            .toTable(qualified_table())
-        )
-        query.awaitTermination()
-    finally:
-        spark.stop()
-
-
-if __name__ == "__main__":
-    main()
