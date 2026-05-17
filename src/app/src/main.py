@@ -1,39 +1,74 @@
-from __future__ import annotations
+import streamlit as st
+import structlog
 
-import os
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from src.config import settings
+from src.logging import configure as configure_logging
+from src.services.agent_client import AgentClient
+from src.services.queries import fetch_sources, load_dashboard_data
+from src.services.trino_client import TrinoClient, TrinoQueryError
+from src.ui.chat import render_agent_chat
+from src.ui.dashboard import render_dashboard, render_data_error, render_filters
+from src.ui.layout import configure_page, render_header
+
+_LOGGING_CONFIGURED = False
 
 
-class JobLakeAppHandler(BaseHTTPRequestHandler):
-    def do_GET(self) -> None:
-        if self.path not in {"/", "/health"}:
-            self.send_response(404)
-            self.end_headers()
-            return
+@st.cache_data(ttl=settings.DASHBOARD_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_sources() -> list[str]:
+    return fetch_sources(TrinoClient())
 
-        body = (
-            "JobLake App\n"
-            "status=ok\n"
-            f"trino={os.getenv('TRINO_HOST', 'trino')}:{os.getenv('TRINO_PORT', '8080')}\n"
-            f"agent={os.getenv('AGENT_URL', 'http://agent:8080/api/v1')}\n"
-        ).encode("utf-8")
 
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+@st.cache_data(ttl=settings.DASHBOARD_CACHE_TTL_SECONDS, show_spinner=False)
+def cached_dashboard_data(days: int, source: str | None, limit: int):
+    return load_dashboard_data(days=days, source=source, limit=limit)
 
-    def log_message(self, format: str, *args: object) -> None:
-        print(f"{self.address_string()} - {format % args}")
+
+def configure_app_logging() -> None:
+    global _LOGGING_CONFIGURED
+
+    if _LOGGING_CONFIGURED:
+        return
+
+    if not structlog.is_configured():
+        configure_logging()
+    _LOGGING_CONFIGURED = True
 
 
 def main() -> None:
-    host = os.getenv("APP_HOST", "0.0.0.0")
-    port = int(os.getenv("APP_PORT", "8501"))
-    server = ThreadingHTTPServer((host, port), JobLakeAppHandler)
-    print(f"JobLake app placeholder is listening on {host}:{port}")
-    server.serve_forever()
+    configure_app_logging()
+    configure_page()
+    render_header()
+
+    section = st.sidebar.radio("Раздел", ["Дашборд", "ИИ-агент"])
+
+    if st.sidebar.button("Обновить данные", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
+    if section == "ИИ-агент":
+        render_agent_chat(AgentClient())
+        return
+
+    try:
+        sources = cached_sources()
+    except TrinoQueryError as exc:
+        sources = []
+        st.sidebar.warning("Источники пока недоступны.")
+        source, days, limit = render_filters(sources)
+        dashboard_error: Exception | None = exc
+    else:
+        source, days, limit = render_filters(sources)
+        dashboard_error = None
+
+    if dashboard_error is not None:
+        render_data_error(dashboard_error)
+    else:
+        try:
+            with st.spinner("Загружаю данные из Trino..."):
+                data = cached_dashboard_data(days=days, source=source, limit=limit)
+            render_dashboard(data=data, days=days, source=source)
+        except TrinoQueryError as exc:
+            render_data_error(exc)
 
 
 if __name__ == "__main__":

@@ -7,4 +7,6 @@ RUN uv sync --frozen --no-dev
 
 COPY . .
 
-CMD ["uv", "run", "--no-dev", "python", "-m", "src.main"]
+ENV PYTHONPATH=/app
+
+CMD ["uv", "run", "--no-dev", "streamlit", "run", "src/main.py", "--server.address", "0.0.0.0", "--server.port", "8501", "--server.headless", "true", "--browser.gatherUsageStats", "false"]
