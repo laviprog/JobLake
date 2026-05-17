@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiotrino>=0.3.0",
     "fastapi>=0.136.1",
     "ollama>=0.6.2",
     "pydantic-settings>=2.14.1",
