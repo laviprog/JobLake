@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "beautifulsoup4>=4.14.3",
     "faststream[kafka]>=0.6.7",
     "pydantic-settings>=2.14.1",
+    "requests>=2.34.2",
     "structlog>=25.5.0",
 ]
 
