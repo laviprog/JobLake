@@ -74,9 +74,7 @@ class Logging(Generic[RendererType]):
                 },
                 "loggers": {
                     "": {"handlers": ["default"], "level": level, "propagate": False},
-                    "uvicorn": {"handlers": [], "level": "INFO", "propagate": True},
-                    "uvicorn.error": {"handlers": [], "level": "INFO", "propagate": True},
-                    "uvicorn.access": {"handlers": [], "level": "NOTSET", "propagate": False},
+                    "faststream": {"handlers": [], "level": "INFO", "propagate": True},
                 },
             }
         )
