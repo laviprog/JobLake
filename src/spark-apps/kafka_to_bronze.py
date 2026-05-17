@@ -78,7 +78,7 @@ def to_bronze_events(kafka_df: DataFrame) -> DataFrame:
 
 
 spark = create_spark("joblake-kafka-to-bronze")
-topic = env("KAFKA_TOPIC_RAW_VACANCIES", "joblake.raw.vacancies")
+topic = env("KAFKA_TOPIC_RAW", "joblake.raw.vacancies")
 bootstrap_servers = env("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
 checkpoint_location = env(
     "BRONZE_CHECKPOINT_LOCATION",

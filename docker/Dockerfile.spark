@@ -16,17 +16,15 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
-    curl -fL "https://github.com/coursier/coursier/releases/download/v${COURSIER_VERSION}/cs-x86_64-pc-linux.gz" \
-      | gzip -d > /usr/local/bin/cs; \
-    chmod +x /usr/local/bin/cs; \
-    mkdir -p /tmp/spark-jars; \
-    cs fetch \
+    curl -fL "https://github.com/coursier/coursier/releases/download/v${COURSIER_VERSION}/coursier.jar" \
+      -o /tmp/coursier.jar; \
+    java -jar /tmp/coursier.jar fetch \
       "org.apache.spark:spark-sql-kafka-0-10_${SCALA_BINARY_VERSION}:${SPARK_VERSION}" \
       "org.apache.iceberg:iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}:${ICEBERG_VERSION}" \
       "org.apache.iceberg:iceberg-aws-bundle:${ICEBERG_VERSION}" \
       --classpath \
       | tr ':' '\n' \
       | xargs -I{} cp -v {} "${SPARK_HOME}/jars/"; \
-    rm -rf /root/.cache/coursier /tmp/spark-jars /usr/local/bin/cs
+    rm -rf /root/.cache/coursier /tmp/coursier.jar
 
 USER spark

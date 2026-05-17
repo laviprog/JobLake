@@ -263,3 +263,6 @@ class HabrCareerParser:
             )
 
         return Salary()
+
+    def __del__(self) -> None:
+        self._session.close()
