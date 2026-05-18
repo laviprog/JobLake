@@ -1,6 +1,6 @@
 # JobLake
 
-AI-powered lakehouse platform for IT job market analytics.
+AI-powered lakehouse platform for IT job market analytics. The project ingests vacancies from Habr Career, processes them through Spark lakehouse jobs, and provides a Streamlit dashboard and FastAPI AI agent for market insights.
 
 ## Table of Contents
 
@@ -49,7 +49,7 @@ Recent vacancies and detailed tables:
 
 AI agent chat:
 
-![AI agent chat](assets/agent.png)
+![AI agent chat](assets/agent_chat.png)
 
 ## Architecture
 
